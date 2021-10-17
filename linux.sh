@@ -27,6 +27,7 @@ function main {
     dpkg -l | grep 'Samba' 2> /dev/null
     dpkg -l | grep 'Bind9' 2> /dev/null
     dpkg -l | grep 'tftpd' 2> /dev/null
+    dpkg -l | grep 'ftp' 2> /dev/null
     dpkg -l | grep 'x11vnc'2> /dev/null
     dpkg -l | grep 'tightvncserver' 2> /dev/null
     dpkg -l | grep 'snmp' 2> /dev/null
