@@ -72,6 +72,7 @@ function main {
     passwd -l root
     #secure /etc/shadow
     chmod 640 /etc/shadow
+    sed -i '/exec shutdown -r not "Control-Alt-Delete pressed"/#exec shutdown -r not "Control-Alt-Delete pressed"/' /etc/init/control-alt-delete.conf
     echo "purging bad programs"
     dpkg -l | grep john 2> /dev/null
     apt-get --purge remove john 2> /dev/null
