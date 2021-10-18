@@ -20,21 +20,47 @@ function main {
     passwd -l root
     #secure /etc/shadow
     chmod 640 /etc/shadow
-    #search for bad programs
-    dpkg -l | grep 'John The Ripper' 2> /dev/null
+    #search for bad programs and uninstall
+    dpkg -l | grep 'john' 2> /dev/null
+    apt-get --purge remove john 2> /dev/null
     dpkg -l | grep 'Hydra' 2> /dev/null
+    apt-get --purge remove hydra 2> /dev/null
     dpkg -l | grep 'Nginx' 2> /dev/null
-    dpkg -l | grep 'Samba' 2> /dev/null
+    apt-get --purge remove samba 2> /dev/null
     dpkg -l | grep 'Bind9' 2> /dev/null
+    apt-get --purge remove bind9 2> /dev/null
     dpkg -l | grep 'tftpd' 2> /dev/null
+    apt-get --purge remove tftpd 2> /dev/null
     dpkg -l | grep 'ftp' 2> /dev/null
+    apt-get --purge remove ftp 2> /dev/null
     dpkg -l | grep 'x11vnc'2> /dev/null
+    apt-get --purge remove x11vnc 2> /dev/null
     dpkg -l | grep 'tightvncserver' 2> /dev/null
+    apt-get --purge remove tightvncserver 2> /dev/null
     dpkg -l | grep 'snmp' 2> /dev/null
-    dpkg -l | grep 'nfs' 2> /dev/null
+    apt-get --purge remove snmp 2> /dev/null
     dpkg -l | grep 'sendmail' 2> /dev/null
+    apt-get --purge remove nginx 2> /dev/null
+    dpkg -l | grep 'Samba' 2> /dev/null
+    apt-get --purge remove samba 2> /dev/null
+    dpkg -l | grep 'Bind9' 2> /dev/null
+    apt-get --purge remove bind9 2> /dev/null
+    dpkg -l | grep 'tftpd' 2> /dev/null
+    apt-get --purge remove tftpd 2> /dev/null
+    dpkg -l | grep 'ftp' 2> /dev/null
+    apt-get --purge remove ftp 2> /dev/null
+    dpkg -l | grep 'x11vnc'2> /dev/null
+    apt-get --purge remove x11vnc 2> /dev/null
+    dpkg -l | grep 'tightvncserver' 2> /dev/null
+    apt-get --purge remove tightvncserver 2> /dev/null
+    dpkg -l | grep 'snmp' 2> /dev/null
+    apt-get --purge remove snmp 2> /dev/null
+    dpkg -l | grep 'sendmail' 2> /dev/null
+    apt-get --purge remove sendmail 2> /dev/null
     dpkg -l | grep 'postfix' 2> /dev/null
-    dpkg -l | grep 'xinetd' 2> /dev/null    
+    apt-get --purge remove postfix 2> /dev/null
+    dpkg -l | grep 'xinetd' 2> /dev/null
+    apt-get --purge xinetd 2> /dev/null
     #installs
     apt-get -V -y install firefox hardinfo chkrootkit iptables portsentry lynis ufw gufw sysv-rc-conf nessus clamav
     apt-get -V -y install --reinstall coreutils
