@@ -12,37 +12,47 @@ function main {
     nano /etc/rc.local #should be empty except for 'exit 0'
     echo  "Setting lockout policy..." 
 	sed -i 's/auth\trequisite\t\t\tpam_deny.so\+/auth\trequired\t\t\tpam_deny.so/' /etc/pam.d/common-auth
-	sed -i '$a auth\trequired\t\t\tpam_tally2.so deny=5 unlock_time=1800 onerr=fail' /etc/pam.d/common-auth
+	sed -i 'auth\trequired\t\t\tpam_tally2.so deny=5 unlock_time=1800 onerr=fail' /etc/pam.d/common-auth
 	sed -i 's/sha512\+/sha512 remember=13/' /etc/pam.d/common-password
     echo "Lockout poicy set."
     echo "configuring IP security settings"
     ##Disables IPv6
-	sed -i '$a net.ipv6.conf.all.disable_ipv6 = 1' /etc/sysctl.conf 
-	sed -i '$a net.ipv6.conf.default.disable_ipv6 = 1' /etc/sysctl.conf
-	sed -i '$a net.ipv6.conf.lo.disable_ipv6 = 1' /etc/sysctl.conf 
+	sed -i 'net.ipv6.conf.all.disable_ipv6 = 1' /etc/sysctl.conf 
+	sed -i 'net.ipv6.conf.default.disable_ipv6 = 1' /etc/sysctl.conf
+	sed -i 'net.ipv6.conf.lo.disable_ipv6 = 1' /etc/sysctl.conf 
 
 	##Disables IP Spoofing
-	sed -i '$a net.ipv4.conf.all.rp_filter=1' /etc/sysctl.conf
+	sed -i 'net.ipv4.conf.all.rp_filter=1' /etc/sysctl.conf
 
 	##Disables IP source routing
-	sed -i '$a net.ipv4.conf.all.accept_source_route=0' /etc/sysctl.conf
+	sed -i 'net.ipv4.conf.all.accept_source_route=0' /etc/sysctl.conf
 
 	##SYN Flood Protection
-	sed -i '$a net.ipv4.tcp_max_syn_backlog = 2048' /etc/sysctl.conf
-	sed -i '$a net.ipv4.tcp_synack_retries = 2' /etc/sysctl.conf
-	sed -i '$a net.ipv4.tcp_syn_retries = 5' /etc/sysctl.conf
-	sed -i '$a net.ipv4.tcp_syncookies=1' /etc/sysctl.conf
+	sed -i 'net.ipv4.tcp_max_syn_backlog = 2048' /etc/sysctl.conf
+	sed -i 'net.ipv4.tcp_synack_retries = 2' /etc/sysctl.conf
+	sed -i 'net.ipv4.tcp_syn_retries = 5' /etc/sysctl.conf
+	sed -i 'net.ipv4.tcp_syncookies=1' /etc/sysctl.conf
 
 	##IP redirecting is disallowed
-	sed -i '$a net.ipv4.ip_foward=0' /etc/sysctl.conf
-	sed -i '$a net.ipv4.conf.all.send_redirects=0' /etc/sysctl.conf
-	sed -i '$a net.ipv4.conf.default.send_redirects=0' /etc/sysctl.conf
-    nano /etc/lightdm/lightdm.conf #allow_guest=false, remove autologin
+	sed -i 'net.ipv4.ip_foward=0' /etc/sysctl.conf
+	sed -i 'net.ipv4.conf.all.send_redirects=0' /etc/sysctl.conf
+	sed -i 'net.ipv4.conf.default.send_redirects=0' /etc/sysctl.conf
+    echo "configuring login - creating file for ubuntu 12"
+    sed -i '[SeatDefault]' /etc/lightdm/lightdm.conf
+    sed -i 'allow-guest=false' /etc/lightdm/lightdm.conf
+    sed -i 'greeter-hide-users=true' /etc/lightdm/lightdm.conf
+    sed -i 'greeter-show-manual-login=true' /etc/lightdm/lightdm.conf 
+    echo "configuring login for ubuntu 14"
+    sed -i '[SeatDefault]' /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
+    sed -i 'allow-guest=false' /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
+    sed -i 'greeter-hide-users=true' /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
+    sed -i 'greeter-show-manual-login=true' /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
     echo "checking if ssh exists"
     dpkg -l | grep openssh-server
     if [$? -eq 0];
     then
     echo "configuring ssh"
+    touch /etc/ssh/sshd_config
     sed -i 's/LoginGraceTime .*/LoginGraceTime 60/g' /etc/ssh/sshd_config
     sed -i 's/PermitRootLogin .*/PermitRootLogin no/g' /etc/ssh/sshd_config
     sed -i 's/Protocol .*/Protocol 2/g' /etc/ssh/sshd_config
