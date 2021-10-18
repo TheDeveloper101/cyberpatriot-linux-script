@@ -5,27 +5,69 @@ function main {
     now="$(date +'%d/%m/%Y %r')"
     #intro
     echo "running main ($now)"
-    echo "run as 'sudo sh linux.sh 2>&1 | tee output.log' to output the console output to a log file."
     #manual config edits
     nano /etc/apt/sources.list #check for malicious sources
     nano /etc/resolv.conf #make sure if safe, use 8.8.8.8 for name server
     nano /etc/hosts #make sure is not redirecting
     nano /etc/rc.local #should be empty except for 'exit 0'
-    nano /etc/sysctl.conf #change net.ipv4.tcp_syncookies entry from 0 to 1
+    echo  "Setting lockout policy..." 
+	sed -i 's/auth\trequisite\t\t\tpam_deny.so\+/auth\trequired\t\t\tpam_deny.so/' /etc/pam.d/common-auth
+	sed -i '$a auth\trequired\t\t\tpam_tally2.so deny=5 unlock_time=1800 onerr=fail' /etc/pam.d/common-auth
+	sed -i 's/sha512\+/sha512 remember=13/' /etc/pam.d/common-password
+    echo "Lockout poicy set."
+    echo "configuring IP security settings"
+    ##Disables IPv6
+	sed -i '$a net.ipv6.conf.all.disable_ipv6 = 1' /etc/sysctl.conf 
+	sed -i '$a net.ipv6.conf.default.disable_ipv6 = 1' /etc/sysctl.conf
+	sed -i '$a net.ipv6.conf.lo.disable_ipv6 = 1' /etc/sysctl.conf 
+
+	##Disables IP Spoofing
+	sed -i '$a net.ipv4.conf.all.rp_filter=1' /etc/sysctl.conf
+
+	##Disables IP source routing
+	sed -i '$a net.ipv4.conf.all.accept_source_route=0' /etc/sysctl.conf
+
+	##SYN Flood Protection
+	sed -i '$a net.ipv4.tcp_max_syn_backlog = 2048' /etc/sysctl.conf
+	sed -i '$a net.ipv4.tcp_synack_retries = 2' /etc/sysctl.conf
+	sed -i '$a net.ipv4.tcp_syn_retries = 5' /etc/sysctl.conf
+	sed -i '$a net.ipv4.tcp_syncookies=1' /etc/sysctl.conf
+
+	##IP redirecting is disallowed
+	sed -i '$a net.ipv4.ip_foward=0' /etc/sysctl.conf
+	sed -i '$a net.ipv4.conf.all.send_redirects=0' /etc/sysctl.conf
+	sed -i '$a net.ipv4.conf.default.send_redirects=0' /etc/sysctl.conf
     nano /etc/lightdm/lightdm.conf #allow_guest=false, remove autologin
-    nano /etc/ssh/sshd_config #Look for PermitRootLogin and set to no
-    nano /etc/login.defs
-    nano /etc/sysctl.conf
+    echo "checking if ssh exists"
+    dpkg -l | grep openssh-server
+    if [$? -eq 0];
+    then
+    echo "configuring ssh"
+    sed -i 's/LoginGraceTime .*/LoginGraceTime 60/g' /etc/ssh/sshd_config
+    sed -i 's/PermitRootLogin .*/PermitRootLogin no/g' /etc/ssh/sshd_config
+    sed -i 's/Protocol .*/Protocol 2/g' /etc/ssh/sshd_config
+    sed -i 's/#PermitEmptyPasswords .*/PermitEmptyPasswords no/g' /etc/ssh/sshd_config
+    sed -i 's/PasswordAuthentication .*/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+    sed -i 's/X11Forwarding .*/X11Forwarding no/g' /etc/ssh/sshd_config
+    
+    fi
+    
+    #set login policy
+    echo "setting login policy"
+    sed -i.bak -e 's/PASS_MAX_DAYS\t[[:digit:]]\+/PASS_MAX_DAYS\t90/' /etc/login.defs
+	sed -i -e 's/PASS_MIN_DAYS\t[[:digit:]]\+/PASS_MIN_DAYS\t10/' /etc/login.defs
+	sed -i -e 's/PASS_WARN_AGE\t[[:digit:]]\+/PASS_WARN_AGE\t7/' /etc/login.defs
+	sed -i -e 's/difok=3\+/difok=3 ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-1/' /etc/pam.d/common-password
     #disable root account
     passwd -l root
     #secure /etc/shadow
     chmod 640 /etc/shadow
-    #search for bad programs and uninstall
-    dpkg -l | grep 'john' 2> /dev/null
+    echo "purging bad programs"
+    dpkg -l | grep john 2> /dev/null
     apt-get --purge remove john 2> /dev/null
-    dpkg -l | grep 'Hydra' 2> /dev/null
+    dpkg -l | grep hydra 2> /dev/null
     apt-get --purge remove hydra 2> /dev/null
-    dpkg -l | grep 'Nginx' 2> /dev/null
+    dpkg -l | grep nginx 2> /dev/null
     apt-get --purge remove samba 2> /dev/null
     dpkg -l | grep 'Bind9' 2> /dev/null
     apt-get --purge remove bind9 2> /dev/null
@@ -61,8 +103,11 @@ function main {
     apt-get --purge remove postfix 2> /dev/null
     dpkg -l | grep 'xinetd' 2> /dev/null
     apt-get --purge xinetd 2> /dev/null
-    #installs
-    apt-get -V -y install firefox hardinfo chkrootkit iptables portsentry lynis ufw gufw sysv-rc-conf nessus clamav
+    echo "updating firefox"
+    killall firefox
+		wait
+	apt-get --purge --reinstall install firefox -y
+    apt-get -V -y install hardinfo chkrootkit iptables portsentry lynis ufw gufw sysv-rc-conf nessus clamav
     apt-get -V -y install --reinstall coreutils
     apt-get update
     apt-get upgrade
